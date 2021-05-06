@@ -75,7 +75,7 @@ def detection(filename, prepro, threads):
 	scoring = 'accuracy'
 
 	models = []
-	schemes = ["complementary", "DAX", "EIIP", "enthalpy", "Galois4", "pc","kmers"]
+	schemes = ["kmers"]
 	# evaluate each model in turn
 	results = []
 	names = []
@@ -84,7 +84,8 @@ def detection(filename, prepro, threads):
 		training_data = pd.read_csv(filename+'.'+scheme, index_col=False)
 		print(training_data)
 
-		label_vectors =training_data['Label'].values
+		label_vectors = training_data['Label'].values
+		label_vectors = np.where(label_vectors > 0, 1, label_vectors).tolist()
 		feature_vectors = training_data.drop(['Label'], axis=1).values
 		print(label_vectors)
 		print(feature_vectors)
@@ -175,7 +176,7 @@ def detection(filename, prepro, threads):
 		plt.legend()
 		plt.savefig('LR-Algorithm_'+scheme+'.png', dpi=100)
 		print('### '+scheme)
-		print('### LG ### The best score with data validation: ', max(yValidation),'with C: ',x[yValidation.index(max(yValidation))])
+		print('### LR ### The best score with data validation: ', max(yValidation),'with C: ',x[yValidation.index(max(yValidation))])
         
 		lr = LogisticRegression(C=x[yValidation.index(max(yValidation))])
 		lr.fit(X_train, Y_train)
@@ -507,7 +508,7 @@ def plot_learning_curve(estimator, title, X, y, axes=None, ylim=None, cv=None, n
                          color="g")
     axes[0].plot(train_sizes, train_scores_mean, 'o-', color="r",
                  label="Training score")
-    axes[0].plot(train_sizes, test_scores_mean, 'o-', color="g",
+    axes[0].plot(train_sizes, test_scores_mean, '^-', color="g",
                  label="Cross-validation score")
     axes[0].legend(loc="best")
 
@@ -609,7 +610,7 @@ def classification_tuning(filename, n_jobs, opc):
 	title = "Learning Curves (tunned "+str(text_model)+")"
 
 	plot_learning_curve(tunnedModel, title, X_train, Y_train, cv=CV, n_jobs=n_jobs)
-	plt.savefig(str(text_model)+"_Tunned_Algorithm.png", dpi=100)
+	plt.savefig(str(text_model)+"_Tunned_Algorithm.svg", dpi=500, format='svg')
 	Fend_t = time.time()
 	print("Full Script Tunning time",Fend_t-Fstart_t)
 
@@ -816,30 +817,41 @@ if __name__ == '__main__':
 	###### JUST MODIFY THESE VARIABLES.  ####################################################
 	# Before run this step, you must convert the sequences to the coding schemes implemented in: https://github.com/simonorozcoarias/MachineLearningInTEs/blob/master/Scripts/formatDB_final.py
 	fileData = "/home/bioml/Projects/PhD/InpactorDB/InpactorDB_non-redundant+negative.fasta"
-	threads=20
-	pre_proc=1
+	threads=64
+	pre_proc=4
 	#preprocessing 
 	#1-None
 	#2-Scaling
 	#3-PCA
 	#4-PCA+Scaling
-	detection(fileData, pre_proc, threads)
+	#detection(fileData, pre_proc, threads)
 	##########################################################################################
 
 	###### JUST MODIFY THESE VARIABLES.  #####################################################
+	# data for multi-class classification
+	#filename = "/home/bioml/Projects/PhD/InpactorDB/version_final/InpactorDB_non-redudant.fasta.kmers"
+
+	# data for binary+multiclass classification
 	filename = "/home/bioml/Projects/PhD/InpactorDB/InpactorDB_non-redundant+negative.fasta.kmers"
 	n_jobs = 64
-	algorithm = 1
+	algorithm = 3
 	#algorithms
 	# 1: LR
 	# 2: LDA
 	# 3: KNN
 	# 4: Linear SVC
-	classification_tuning(filename, n_jobs, algorithm)
+	#classification_tuning(filename, n_jobs, algorithm)
 	##########################################################################################
 
 	####### JUST MODIFY THESE VARIABLES ######################################################
-	filename = "/home/bioml/Projects/PhD/InpactorDB/InpactorDB_non-redundant+negative.fasta.kmers"
+	# data for multi-class classification
+	#filename = "/home/bioml/Projects/PhD/InpactorDB/version_final/InpactorDB_non-redudant.fasta.kmers"
+	
+	# data for binary+multiclass classification
+	#filename = "/home/bioml/Projects/PhD/InpactorDB/InpactorDB_non-redundant+negative.fasta.kmers"
+
+	# data for reduced dataset
+	filename = "/home/bioml/Projects/PhD/InpactorDB/InpactorDB_non-redundant+negative.fasta.508_kmers"
 	n_jobs = 64
 	ensemble_method(filename, n_jobs)
 	########################################################################################## 
@@ -847,5 +859,5 @@ if __name__ == '__main__':
 	####### JUST MODIFY THESE VARIABLES ######################################################
 	filename = "/home/bioml/Projects/PhD/InpactorDB/InpactorDB_non-redundant+negative.fasta.kmers"
 	n_jobs = 64
-	feature_selection(filename, n_jobs)
+	#feature_selection(filename, n_jobs)
 	########################################################################################## 
